@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      location.href = "/";
+    </script>
+  <title>Game Selector</title>
+  <link rel="stylesheet" href="css/games.css" />
+  <style>
+    html, body {
+      height: auto;
+      min-height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="search-bar">
+    <div class="container">
+      <div class="input-row">
+        <input
+          class="input"
+          id="searchInput"
+          type="text"
+          placeholder="Search Games Here..."
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" id="gameGrid"></div>
+
+  <script>
+  (async function(){
+    const resp  = await fetch('games/game-info.json');
+    const games = await resp.json();
+    sessionStorage.setItem("gamesList", JSON.stringify(games));
+
+    function initGames(filter = "") {
+      const grid = document.getElementById("gameGrid");
+      grid.innerHTML = "";
+      games
+        .filter(g => g.title.toLowerCase().includes(filter.toLowerCase()))
+        .forEach((game, index) => {
+          const card = document.createElement("div");
+          card.className = "game-card";
+          card.style.setProperty("--card-index", index); // sets stagger delay
+          card.onclick = () => {
+            sessionStorage.setItem("currentGame", JSON.stringify(game));
+            navigate('/loader');
+          };
+          const img   = document.createElement("img");
+          img.src     = game.thumbnail;
+          img.alt     = game.title;
+          const title = document.createElement("div");
+          title.className   = "game-title";
+          title.textContent = game.title;
+          card.appendChild(img);
+          card.appendChild(title);
+          grid.appendChild(card);
+        });
+    }
+
+    document
+      .getElementById("searchInput")
+      .addEventListener("input", e => initGames(e.target.value));
+
+    initGames();
+  })();
+  </script>
+
+</body>
+</html>

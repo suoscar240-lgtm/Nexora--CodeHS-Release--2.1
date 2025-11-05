@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  <link rel="stylesheet" href="css/_tokens.css" />
+
+  <script>
+    (function () {
+      try {
+        var THEME_KEY = 'settings.theme';
+        var SCHEME_KEY = 'settings.colorScheme';
+        var MAP = {
+          'midnight-amber': 'theme-midnight-amber',
+          'midnight-blueberry': 'theme-midnight-blueberry',
+          'midnight-grape': 'theme-midnight-grape'
+        };
+        var savedTheme = null;
+        var savedScheme = null;
+        try {
+          savedTheme = localStorage.getItem(THEME_KEY);
+          savedScheme = localStorage.getItem(SCHEME_KEY);
+        } catch (e) { savedTheme = null; savedScheme = null; }
+        var doc = document.documentElement;
+        if (savedScheme === 'light') {
+          doc.classList.add('light-scheme');
+          doc.classList.remove('theme-midnight-amber','theme-midnight-blueberry','theme-midnight-grape');
+        } else {
+          var cls = (savedTheme && MAP[savedTheme]) ? MAP[savedTheme] : null;
+          if (!cls) {
+            if (!doc.classList.contains('theme-midnight-amber') &&
+                !doc.classList.contains('theme-midnight-blueberry') &&
+                !doc.classList.contains('theme-midnight-grape') &&
+                !doc.classList.contains('light-scheme')) {
+              cls = 'theme-midnight-amber';
+            }
+          }
+          if (cls) {
+            doc.classList.remove('light-scheme','theme-midnight-amber','theme-midnight-blueberry','theme-midnight-grape');
+            doc.classList.add(cls);
+          } else {
+            doc.classList.remove('light-scheme');
+          }
+        }
+      } catch (err) {}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="css/home.css" />
+
+  <title>Nexora</title>
+</head>
+<body>
+  <section class="home" aria-labelledby="nexora-title">
+    <div class="content">
+      <h1 id="nexora-title">Nexora</h1>
+      <h4>Nexora is a feature-rich website offering a wide range of tools and games.</h4>
+      <a href="#" class="play-button" data-route="/games" role="button">Play Now</a>
+    </div>
+  </section>
+
+  <script>
+    window._nexoraTheme = {
+      setTheme: function (id) {
+        var map = {
+          'midnight-amber': 'theme-midnight-amber',
+          'midnight-blueberry': 'theme-midnight-blueberry',
+          'midnight-grape': 'theme-midnight-grape'
+        };
+        if (!map[id]) return;
+        document.documentElement.classList.remove('light-scheme','theme-midnight-amber','theme-midnight-blueberry','theme-midnight-grape');
+        document.documentElement.classList.add(map[id]);
+        try { localStorage.setItem('settings.theme', id); } catch (e) {}
+        document.dispatchEvent(new CustomEvent('settings:themeChanged', { detail: { theme: id } }));
+      },
+      setScheme: function (scheme) {
+        if (scheme === 'light') {
+          document.documentElement.classList.add('light-scheme');
+          document.documentElement.classList.remove('theme-midnight-amber','theme-midnight-blueberry','theme-midnight-grape');
+          try { localStorage.setItem('settings.colorScheme', 'light'); } catch(e){}
+        } else {
+          document.documentElement.classList.remove('light-scheme');
+          try { localStorage.setItem('settings.colorScheme', 'dark'); } catch(e){}
+        }
+        document.dispatchEvent(new CustomEvent('settings:colorSchemeChanged', { detail: { scheme: scheme } }));
+      }
+    };
+  </script>
+</body>
+</html>

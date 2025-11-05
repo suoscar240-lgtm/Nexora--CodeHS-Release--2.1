@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="/css/_tokens.css" />
+  <link rel="stylesheet" href="/css/settings.css" />
+  <link id="page-favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><rect width='100%' height='100%' fill='%23888' rx='6'/></svg>">
+  <style>
+    #disguise-badge svg { width:48px; height:48px; height:48px; display:block; }
+    .favicon-thumb { width:40px; height:40px; border-radius:6px; object-fit:cover; display:block; }
+    .hidden-note { font-size:13px; color:var(--muted,#6b6b6b); margin-top:8px; }
+    .locked { opacity:0.6; pointer-events:none; }
+  </style>
+</head>
+<body>
+  <div class="settings-root" id="settingsRoot" aria-live="polite">
+    <div class="app">
+      <h1 class="settings-title">Settings</h1>
+
+      <nav class="nav-buttons" role="tablist" aria-label="Settings sections">
+        <button class="nav-btn active" data-target="appearance" role="tab" aria-selected="true">Appearance</button>
+        <button class="nav-btn" data-target="cloaking" role="tab" aria-selected="false">Cloaking</button>
+        <button class="nav-btn" data-target="legal" role="tab" aria-selected="false">Legal</button>
+        <button class="nav-btn" data-target="misc" role="tab" aria-selected="false">Misc</button>
+      </nav>
+
+      <div class="content">
+        <section id="appearance" class="panel" role="tabpanel">
+          <div class="section">
+            <h2>Theme</h2>
+            <p class="description">Choose a visual theme for the interface.</p>
+
+            <div class="theme-options" role="list">
+              <button class="theme-option selected" data-value="midnight-amber" role="listitem" aria-pressed="true">Midnight Amber</button>
+              <button class="theme-option" data-value="midnight-blueberry" role="listitem" aria-pressed="false">Midnight Blueberry</button>
+              <button class="theme-option" data-value="midnight-grape" role="listitem" aria-pressed="false">Midnight Grape</button>
+            </div>
+
+            <div style="height:12px;"></div>
+
+            <h2>Dark/Light Mode</h2>
+            <p class="description">Toggle the global color scheme between dark and light. When enabled, the interface will use the selected dark theme; disable for the light scheme. This preference is saved locally.</p>
+
+            <div class="subsection" style="display:flex;flex-direction:column;gap:12px;">
+              <div class="row" style="align-items:center; margin:0;">
+                <div class="toggle" tabindex="0" role="switch" aria-checked="false" id="schemeToggle" aria-label="Toggle dark light mode">
+                  <input id="schemeToggleInput" type="checkbox" aria-hidden="true" />
+                  <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb" aria-hidden="true"></span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="cloaking" class="panel" role="tabpanel" hidden>
+          <div class="section">
+            <h2>About:Blank</h2>
+            <p class="description">About:Blank replaces the open tab's title and favicon with a neutral placeholder so the tab blends into your workspace. Use responsibly.</p>
+
+            <div class="subsection" style="display:flex;align-items:center;justify-content:flex-start;">
+              <div class="row" style="margin:0;">
+                <button id="openAboutBtn" class="uptime-btn" type="button" aria-label="Open About Blank" onclick="openGame()">
+                  <span>Open</span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="subsection" style="margin-top:12px;">
+              <h2 class="tab-appearance-heading">Tab Appearance</h2>
+              <p class="description" style="margin-top:6px;">Choose which familiar site look the tab should mimic while About:Blank is active. This affects the displayed title and favicon the tab presents to the OS and other tabs.</p>
+
+              <div style="margin-top:8px;">
+                <label for="disguiseSelect" class="description" style="display:block;margin-bottom:8px;">Select a disguise</label>
+                <select id="disguiseSelect" class="theme-option" style="min-width:240px;">
+                  <option value="">(None)</option>
+                  <option value="Clever">Clever</option>
+                  <option value="Google Classroom">Google Classroom</option>
+                  <option value="Canvas">Canvas</option>
+                  <option value="Google Drive">Google Drive</option>
+                  <option value="Seesaw">Seesaw</option>
+                  <option value="Edpuzzle">Edpuzzle</option>
+                  <option value="Kahoot!">Kahoot!</option>
+                  <option value="Quizlet">Quizlet</option>
+                  <option value="Khan Academy">Khan Academy</option>
+                </select>
+                <div id="disguise-locked-note" class="hidden-note" aria-hidden="true" style="display:none;">Disguise is <strong>[Hidden]</strong> while About:Blank is enabled.</div>
+              </div>
+
+              <div id="disguise-preview" style="margin-top:12px; display:flex;gap:12px;align-items:center;">
+                <div id="disguise-badge" aria-hidden="true" style="width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--settings-panel-2);"></div>
+                <div>
+                  <div id="disguise-title" style="font-weight:700;font-size:15px;color:var(--settings-accent);">No disguise</div>
+                  <div id="disguise-sub" class="description" style="margin-top:6px;">Your tab will keep the current title and favicon.</div>
+                  <div style="margin-top:8px; display:flex; gap:12px; align-items:center;">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="legal" class="panel" role="tabpanel" hidden>
+          <div class="section">
+            <h2>Legal</h2>
+            <p class="description">Policies and links related to privacy and cookies for this project.</p>
+
+            <div class="subsection" aria-hidden="false" style="padding:10px;">
+              <div class="policy-block" role="region" aria-labelledby="privacy-title">
+                <div class="policy-info">
+                  <p id="privacy-title" class="policy-title">Privacy Policy</p>
+                  <p class="policy-desc">Read the project's Privacy Policy to learn what data is collected, how it is used, and your rights regarding personal information.</p>
+                </div>
+                <div class="policy-actions">
+                  <a class="policy-btn" role="button" href="https://thenexoraproject.xyz/privacy-policy" target="_blank" rel="noopener noreferrer" aria-label="Open Privacy Policy">
+                    <span>Open</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>
+                  </a>
+                </div>
+              </div>
+
+              <div style="height:12px;"></div>
+
+              <div class="policy-block" role="region" aria-labelledby="cookie-title">
+                <div class="policy-info">
+                  <p id="cookie-title" class="policy-title">Cookie Policy</p>
+                  <p class="policy-desc">View the Cookie Policy to understand what cookies are used, why they are stored, and how you can manage cookie preferences.</p>
+                </div>
+                <div class="policy-actions">
+                  <a class="policy-btn" role="button" href="https://thenexoraproject.xyz/cookies" target="_blank" rel="noopener noreferrer" aria-label="Open Cookie Policy">
+                    <span>Open</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="misc" class="panel" role="tabpanel" hidden>
+          <div class="section">
+            <h2>Misc</h2>
+            <p class="description">Utility links and tools related to this project.</p>
+
+            <div class="subsection" style="padding:10px;">
+              <h3 style="margin:0;font-size:15px;color:var(--primary-accent);font-weight:600;">Cookies</h3>
+              <p class="description" style="margin-top:6px;">Export and import data to preserve progress across links.</p>
+              <div class="row" style="margin-top:8px;">
+                <a class="blank-link" id="downloadCookie" role="button" href="#" aria-label="Download settings">Download Cookie</a>
+                <a class="blank-link" id="uploadCookie" role="button" style="background:transparent;border:1px solid var(--surface);color:var(--muted);" href="#" aria-label="Upload settings">Upload Cookie</a>
+              </div>
+            </div>
+
+            <div style="height:12px;"></div>
+
+            <div class="subsection" style="padding:10px;">
+              <div class="uptime-block" role="region" aria-labelledby="uptime-title">
+                <div class="uptime-info">
+                  <p id="uptime-title" class="uptime-title">Uptime</p>
+                  <p class="uptime-desc">Open the project's uptime status page to view current availability, incidents, and historical uptime metrics.</p>
+                </div>
+                <div class="uptime-actions">
+                  <a class="uptime-btn" role="button" href="https://nexora.betteruptime.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Uptime">
+                    <span>Open</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div style="height:12px;"></div>
+
+            <div class="subsection" style="padding:10px;">
+              <div class="discord-block" role="region" aria-labelledby="discord-title">
+                <div class="discord-info">
+                  <p id="discord-title" class="discord-title">Discord</p>
+                  <p class="discord-desc">Join the community on Discord for updates, support, and discussion with other users and contributors.</p>
+                </div>
+                <div class="discord-actions">
+                  <a class="discord-btn" role="button" href="https://discord.gg/NjTeq94Cmj" target="_blank" rel="noopener noreferrer" aria-label="Open Discord">
+                    <span>Open</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"/></svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/settings.js"></script>
+
+  <script>
+    (function () {
+      if (!window._aboutWin) window._aboutWin = null;
+
+      function openGameSimpleLocal(url = "https://easynotes22-15927344.codehs.me/") {
+        try {
+          const win = window.open();
+          if (!win) return null;
+          try {
+            if (!win.document.body) win.document.documentElement.appendChild(win.document.createElement('body'));
+            const iframe = win.document.createElement('iframe');
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.style.border = "none";
+            iframe.src = url;
+            iframe.setAttribute('loading', 'eager');
+            iframe.setAttribute('referrerpolicy', 'no-referrer');
+            win.document.body.appendChild(iframe);
+          } catch (innerErr) {
+            try { win.location.href = url; } catch (navErr) {}
+          }
+          return win;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      if (!window.openGameSimple) window.openGameSimple = openGameSimpleLocal;
+
+      document.addEventListener('settings:aboutBlankToggled', function (e) {
+        try {
+          const enabled = !!(e && e.detail && e.detail.enabled);
+
+          if (enabled) {
+            if (window._aboutWin && !window._aboutWin.closed) {
+              try { window._aboutWin.focus(); } catch (err) {}
+              return;
+            }
+
+            if (window._aboutWin && !window._aboutWin.closed) {
+              try { window._aboutWin.focus(); } catch (err) {}
+              return;
+            }
+
+            const openedBySettings = window._aboutWin && !window._aboutWin.closed;
+            if (!openedBySettings) {
+              const w = (typeof window.openGameSimple === 'function') ? window.openGameSimple("https://easynotes22-15927344.codehs.me/") : openGameSimpleLocal("https://easynotes22-15927344.codehs.me/");
+              if (w) window._aboutWin = w;
+            }
+          } else {
+            if (window._aboutWin && !window._aboutWin.closed) {
+              try { window._aboutWin.close(); } catch (err) {}
+            }
+            window._aboutWin = null;
+          }
+        } catch (err) {
+        }
+      }, false);
+
+      function openGame() {
+        var win = window.open();
+        var url = "https://easynotes22-15927344.codehs.me/";
+        try {
+          var iframe = win.document.createElement('iframe');
+          iframe.style.width = "100%";
+          iframe.style.height = "100%";
+          iframe.style.border = "none";
+          iframe.src = url;
+          win.document.body.appendChild(iframe);
+        } catch (e) {
+          try { win.location.href = url; } catch (e) {}
+        }
+        return win;
+      }
+
+      window.openGame = openGame;
+
+    })();
+  </script>
+</body>
+</html>

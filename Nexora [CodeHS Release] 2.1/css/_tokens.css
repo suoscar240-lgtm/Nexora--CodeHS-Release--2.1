@@ -1,0 +1,161 @@
+/* -----------------------------------------------------------
+   _tokens.css
+   Central design tokens and theme blocks for Nexora
+   - Include this file first in every page so components pick up tokens
+   ----------------------------------------------------------- */
+
+/* Base semantic tokens (light fallback) */
+:root {
+  --page-bg: #ffffff;
+  --surface: #f7f7f8;
+  --surface-2: #efefef;
+
+  --primary: #d4550a;
+  --primary-deep: #992f05;
+  --primary-shadow: rgba(212,85,10,0.5);
+
+  --primary-accent: var(--primary);
+  --on-primary: #fff0e8;
+
+  --text: #111111;
+  --muted: #666666;
+
+  --radius: 10px;
+  --control-gap: 12px;
+  --focus-ring: 3px;
+  --focus-color: rgba(212,85,10,0.18);
+
+  --contrast-high: rgba(0,0,0,0.85);
+  --contrast-low: rgba(0,0,0,0.5);
+
+  /* gradients / accents can be derived from primary */
+  --accent-gradient: linear-gradient(90deg, var(--primary-deep), var(--primary));
+}
+
+/* DARK THEMES - apply one theme class to the documentElement */
+/* Midnight Amber */
+.theme-midnight-amber {
+  --page-bg: #0a0605;
+  --surface: #1a100d;
+  --surface-2: #1f1410;
+
+  --primary: #d4550a;
+  --primary-deep: #992f05;
+  --primary-shadow: rgba(212,85,10,0.5);
+
+  --primary-accent: var(--primary);
+  --on-primary: #fff0e8;
+
+  --text: #f8e7e0;
+  --muted: #c9a08a;
+
+  --contrast-high: rgba(255,255,255,0.94);
+  --contrast-low: rgba(255,255,255,0.66);
+
+  --focus-color: rgba(212,85,10,0.18);
+  --accent-gradient: linear-gradient(90deg, rgba(255,77,0,1), rgba(255,106,0,1));
+}
+
+/* Midnight Blueberry */
+.theme-midnight-blueberry {
+  --page-bg: #071026;
+  --surface: #0d1b2a;
+  --surface-2: #112534;
+
+  --primary: #6ea8fe;
+  --primary-deep: #3f78d1;
+  --primary-shadow: rgba(110,168,254,0.35);
+
+  --primary-accent: var(--primary);
+  --on-primary: #dbe9ff;
+
+  --text: #dbe9ff;
+  --muted: #9fb7d6;
+
+  --contrast-high: rgba(255,255,255,0.95);
+  --contrast-low: rgba(255,255,255,0.7);
+
+  --focus-color: rgba(110,168,254,0.16);
+  --accent-gradient: linear-gradient(90deg, #3f78d1, #6ea8fe);
+}
+
+/* Midnight Grape */
+.theme-midnight-grape {
+  --page-bg: #0a0812;
+  --surface: #171024;
+  --surface-2: #211428;
+
+  --primary: #b388ff;
+  --primary-deep: #7a4ed1;
+  --primary-shadow: rgba(179,136,255,0.35);
+
+  --primary-accent: var(--primary);
+  --on-primary: #efe7ff;
+
+  --text: #efe7ff;
+  --muted: #cdb9e8;
+
+  --contrast-high: rgba(255,255,255,0.95);
+  --contrast-low: rgba(255,255,255,0.72);
+
+  --focus-color: rgba(179,136,255,0.16);
+  --accent-gradient: linear-gradient(90deg, #7a4ed1, #b388ff);
+}
+
+/* LIGHT SCHEME helper: when .light-scheme is on documentElement, components should fall back to light tokens */
+.light-scheme {
+  --page-bg: #ffffff;
+  --surface: #f7f7f8;
+  --surface-2: #efefef;
+
+  --primary: #d4550a;
+  --primary-deep: #992f05;
+  --primary-shadow: rgba(212,85,10,0.12);
+
+  --primary-accent: var(--primary);
+  --on-primary: #fff0e8;
+
+  --text: #111111;
+  --muted: #666666;
+
+  --contrast-high: rgba(0,0,0,0.85);
+  --contrast-low: rgba(0,0,0,0.6);
+
+  --focus-color: rgba(212,85,10,0.08);
+  --accent-gradient: linear-gradient(90deg, #ff8a33, #ffc38a);
+}
+
+/* Utility aliases used throughout component CSS */
+.bg-page { background: var(--page-bg); color: var(--text); }
+.surface { background: var(--surface); color: var(--text); }
+.surface-2 { background: var(--surface-2); color: var(--text); }
+
+.btn-primary {
+  background: var(--primary-accent);
+  color: var(--on-primary);
+  border: none;
+}
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.text-muted { color: var(--muted); }
+.text-primary { color: var(--primary-accent); }
+
+.sep { border-color: rgba(0,0,0,0.04); }
+
+:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--focus-ring) var(--focus-color);
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.hi-contrast { color: var(--contrast-high); }
+.lo-contrast { color: var(--contrast-low); }
+
+.u-gap { gap: var(--control-gap); }
+.round { border-radius: var(--radius); }
+
+/* End of token file */

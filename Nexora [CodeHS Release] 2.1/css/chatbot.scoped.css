@@ -1,0 +1,287 @@
+.nexora {
+  --page-bg: var(--page-bg, #0a0605);
+  --panel: var(--surface, #1a100d);
+  --panel-2: var(--surface-2, #1f1410);
+
+  --orange: var(--primary, #d4550a);
+  --orange-deep: var(--primary-deep, #992f05);
+  --orange-shadow: var(--primary-shadow, rgba(212,85,10,0.5));
+
+  --accent: var(--orange);
+  --send-icon: var(--on-primary, #fff0e8);
+
+  --text: var(--text, #f8e7e0);
+  --muted: var(--muted, #c9a08a);
+
+  --radius: var(--radius, 12px);
+
+  box-sizing: border-box;
+  height: 100%;
+  color: var(--text);
+  font: 500 16px/1.5 Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+}
+
+.nexora *, .nexora *::before, .nexora *::after { box-sizing: inherit; }
+
+html, body { height: 100%; }
+
+.nexora body { margin: 0; }
+
+.nexora .app { display: flex; flex-direction: column; height: 100%; }
+
+.nexora .header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: .3px;
+  border-bottom: 1px solid color-mix(in srgb, var(--panel) 8%, #000 0%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 6%, transparent), transparent);
+}
+
+.nexora .chat {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.nexora .scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  gap: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.nexora .intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.nexora .intro h1 {
+  margin: 0;
+  font: 800 28px/1.1 inherit;
+  letter-spacing: .2px;
+  background: linear-gradient(90deg, var(--orange), var(--orange-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.nexora .msg { max-width: 72%; animation: fade .2s ease; }
+
+.nexora .msg.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: var(--send-icon);
+  padding: 10px 12px;
+  border-radius: 18px;
+  border-bottom-right-radius: 6px;
+  box-shadow: 0 6px 20px var(--orange-shadow);
+}
+
+.nexora .msg.bot {
+  align-self: flex-start;
+  background: transparent;
+  color: var(--text);
+  padding: 0;
+  border-radius: 0;
+}
+
+.nexora .bot-chunk { margin: 6px 0; }
+
+.nexora .bot-name {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.nexora .code {
+  margin: 10px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid color-mix(in srgb, var(--panel) 8%, #000 0%);
+}
+
+.nexora .code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel-2);
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.nexora .code-lang {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--orange);
+  letter-spacing: .2px;
+}
+
+.nexora .copy-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background .15s ease, transform .05s ease;
+}
+.nexora .copy-btn:hover { background: color-mix(in srgb, var(--panel) 12%, transparent); }
+.nexora .copy-btn:active { transform: scale(0.96); }
+
+.nexora .copy-btn img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  filter: none; 
+}
+
+.nexora pre {
+  margin: 0;
+  padding: 12px;
+  background: transparent;
+  overflow: auto;
+}
+.nexora code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+}
+
+.nexora .footer {
+  padding: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--panel) 8%, #000 0%);
+  background: color-mix(in srgb, var(--panel-2) 6%, transparent);
+}
+
+.nexora .input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid color-mix(in srgb, var(--panel) 8%, #000 0%);
+  border-radius: 999px;
+  padding: 6px 8px;
+}
+.nexora .input-row:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.nexora .input {
+  flex: 1;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  outline: 0;
+  height: 44px;
+  padding: 0 10px;
+  font-size: 16px;
+}
+.nexora .input::placeholder { color: color-mix(in srgb, var(--text) 36%, transparent); opacity: .9; }
+
+.nexora .send {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--send-icon);
+  font-size: 18px;
+  font-weight: 900;
+  transition: transform .06s ease, filter .15s ease;
+}
+.nexora .send:hover { filter: brightness(1.08); }
+.nexora .send:active { transform: scale(0.97); }
+.nexora .send.typing { animation: pulse 1s infinite; }
+
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .6 } }
+@keyframes fade { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: translateY(0) } }
+
+.nexora .hidden { display: none; }
+
+.nexora .typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  max-width: 72%;
+  line-height: 1;
+}
+
+.nexora .loader {
+  width: 2.6rem;
+  padding: 0.4rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--accent);
+  --sp:
+    conic-gradient(#0000 10%, #000),
+    linear-gradient(#000 0 0) content-box;
+  -webkit-mask: var(--sp);
+          mask: var(--sp);
+  -webkit-mask-composite: source-out;
+          mask-composite: subtract;
+  animation: SP 1s infinite linear;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes SP { to { transform: rotate(1turn); } }
+
+.nexora .intro h1::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  margin-left: 6px;
+  background: var(--accent);
+  vertical-align: middle;
+  border-radius: 1px;
+  transform: translateY(-0.06em);
+}
+
+.nexora a:focus, .nexora button:focus, .nexora .input:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nexora * , .nexora *::before, .nexora *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+  .nexora .msg, .nexora .loader, .nexora .intro, .nexora .previewWrap {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nexora Chat</title>
+    <script>
+      location.href = "/";
+    </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+
+  <link rel="stylesheet" href="css/chatbot.scoped.css" />
+</head>
+
+<body>
+  <div class="nexora">
+    <div class="app">
+      <div class="header">Nexora Chat</div>
+
+      <div class="chat">
+        <div class="intro" id="intro"><h1>What can I help you with?</h1></div>
+        <div class="scroll" id="scroll" aria-live="polite"></div>
+      </div>
+
+      <div class="footer">
+        <div class="input-row">
+          <input id="prompt" class="input" placeholder="Message AI..." autocomplete="off" />
+          <button id="send" class="send" title="Send" aria-label="Send message">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <script>
+  (function(){
+    if(window.NexoraChat) return;
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function formatLang(raw){
+      if(!raw) return "Code";
+      const lower = raw.toLowerCase();
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    }
+
+    function renderReplyWithCode(text){
+      const re = /```(\w+)?\n([\s\S]*?)```/g;
+      let html = "";
+      let last = 0;
+      let m;
+      while((m = re.exec(text)) !== null){
+        const preText = text.slice(last, m.index).trim();
+        if(preText) html += `<div class="bot-chunk">${escapeHtml(preText)}</div>`;
+
+        const langRaw = m[1] || "";
+        const langLabel = formatLang(langRaw);
+        const code = m[2];
+
+        html += `
+          <div class="code">
+            <div class="code-header">
+              <span class="code-lang">${escapeHtml(langLabel)}</span>
+              <button class="copy-btn" title="Copy">
+                <img src="asset/share-icon.svg" alt="Copy">
+              </button>
+            </div>
+            <pre><code class="language-${escapeHtml(langRaw)}">${escapeHtml(code)}</code></pre>
+          </div>
+        `;
+        last = re.lastIndex;
+      }
+
+      const postText = text.slice(last).trim();
+      if(postText) html += `<div class="bot-chunk">${escapeHtml(postText)}</div>`;
+
+      return html;
+    }
+
+    function getEls(root){
+      root = root && root.querySelector ? root : document;
+      return {
+        containerRoot: root,
+        scrollEl: root.querySelector ? root.querySelector("#scroll") : document.querySelector("#scroll"),
+        introEl: root.querySelector ? root.querySelector("#intro") : document.querySelector("#intro"),
+        promptEl: root.querySelector ? root.querySelector("#prompt") : document.querySelector("#prompt"),
+        sendEl: root.querySelector ? root.querySelector("#send") : document.querySelector("#send")
+      };
+    }
+
+    function addUserMessage(text, root){
+      const { scrollEl } = getEls(root);
+      if(!scrollEl) return;
+      const div = document.createElement("div");
+      div.className = "msg user";
+      div.textContent = text;
+      scrollEl.appendChild(div);
+      scrollEl.scrollTop = scrollEl.scrollHeight;
+    }
+
+    function addBotMessage(markup, root){
+      const { scrollEl } = getEls(root);
+      if(!scrollEl) return;
+
+      const wrap = document.createElement("div");
+      wrap.className = "msg bot";
+
+      const name = document.createElement("div");
+      name.className = "bot-name";
+      name.textContent = "Llama 3.3 70B";
+
+      const body = document.createElement("div");
+      body.innerHTML = markup;
+
+      wrap.appendChild(name);
+      wrap.appendChild(body);
+      scrollEl.appendChild(wrap);
+      scrollEl.scrollTop = scrollEl.scrollHeight;
+
+      wrap.querySelectorAll(".copy-btn").forEach(btn=>{
+        if(btn.dataset.nexoraCopy) return;
+        btn.dataset.nexoraCopy = "1";
+        btn.onclick = () => {
+          const codeEl = btn.closest(".code")?.querySelector("pre");
+          const code = codeEl ? codeEl.innerText : "";
+          if(code) navigator.clipboard.writeText(code).catch(()=>{});
+          const old = btn.innerHTML;
+          btn.textContent = "✅";
+          setTimeout(()=>{ btn.innerHTML = old; }, 1500);
+        };
+      });
+
+      requestAnimationFrame(()=>{ if(window.hljs) hljs.highlightAll(); });
+    }
+
+    const introState = new WeakMap();
+
+    function startIntroLoop(root){
+      const els = getEls(root);
+      const introEl = els.introEl;
+      if(!introEl) return;
+      if(introState.has(introEl)) return;
+
+      const h1 = introEl.querySelector('h1');
+      if(!h1) return;
+
+      const text = h1.textContent.trim() || "What can I help you with?";
+      h1.textContent = '';
+      let pos = 0;
+      let deleting = false;
+      let speed = 80;
+      let timer = null;
+
+      function step(){
+        if(!introEl || !h1) return stop();
+        if(!deleting){
+          pos++;
+          h1.textContent = text.slice(0,pos);
+          if(pos >= text.length){
+            deleting = true;
+            clearTimeout(timer);
+            timer = setTimeout(step, 900);
+            return;
+          }
+        } else {
+          pos--;
+          h1.textContent = text.slice(0,pos);
+          if(pos <= 0){
+            deleting = false;
+            clearTimeout(timer);
+            timer = setTimeout(step, 500);
+            return;
+          }
+        }
+        timer = setTimeout(step, deleting ? speed/2 : speed);
+      }
+
+      function stop(){
+        if(timer) clearTimeout(timer);
+        introState.delete(introEl);
+        if(h1) h1.textContent = text;
+        introEl.classList.remove('nexora-intro-running');
+      }
+
+      introState.set(introEl, { stop });
+      introEl.classList.add('nexora-intro-running');
+      timer = setTimeout(step, 500);
+    }
+
+    function stopIntroLoop(root){
+      const els = getEls(root);
+      const introEl = els.introEl;
+      if(!introEl) return;
+      const ctl = introState.get(introEl);
+      if(ctl && typeof ctl.stop === 'function') ctl.stop();
+    }
+
+    function showTypingIndicator(root){
+      const { scrollEl } = getEls(root);
+      if(!scrollEl) return;
+      if(scrollEl.querySelector('#nexora-typing')) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'msg bot';
+      wrap.id = 'nexora-typing';
+
+      const name = document.createElement('div');
+      name.className = 'bot-name';
+      name.textContent = 'Llama 3.3 70B';
+
+      const body = document.createElement('div');
+      body.innerHTML = `<div class="typing-indicator"><div class="loader" aria-hidden="true"></div><div>Typing...</div></div>`;
+
+      wrap.appendChild(name);
+      wrap.appendChild(body);
+      scrollEl.appendChild(wrap);
+      scrollEl.scrollTop = scrollEl.scrollHeight;
+    }
+
+    function hideTypingIndicator(root){
+      const { scrollEl } = getEls(root);
+      if(!scrollEl) return;
+      const el = scrollEl.querySelector('#nexora-typing');
+      if(el && el.parentNode) el.parentNode.removeChild(el);
+    }
+
+    async function sendMessage(root){
+      const els = getEls(root);
+      const { introEl, promptEl, sendEl, scrollEl } = els;
+      if(!promptEl || !sendEl) return;
+
+      if(sendEl.disabled) return;
+
+      const prompt = promptEl.value.trim();
+      if(!prompt) return;
+
+      stopIntroLoop(root);
+
+      if(introEl && !introEl.classList.contains("hidden")){
+        introEl.classList.add("hidden");
+      }
+
+      addUserMessage(prompt, root);
+      promptEl.value = "";
+
+      sendEl.disabled = true;
+      sendEl.classList.add("typing");
+      const oldLabel = sendEl.textContent;
+      sendEl.textContent = "◻";
+
+      showTypingIndicator(root);
+
+      try {
+        const res = await fetch("https://p2wwr4tnl7p2yuhe7klua3iguu0hsssr.lambda-url.us-east-2.on.aws/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "meta-llama/llama-3.3-70b-instruct:free",
+            messages: [{ role: "user", content: prompt }]
+          })
+        });
+
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content || "API Error";
+        const markup = renderReplyWithCode(reply);
+
+        hideTypingIndicator(root);
+        addBotMessage(markup, root);
+
+      } catch (err) {
+        hideTypingIndicator(root);
+        addBotMessage(`<div class="bot-chunk">Error: ${escapeHtml(err?.message || String(err))}</div>`, root);
+      } finally {
+        sendEl.classList.remove("typing");
+        sendEl.textContent = oldLabel;
+        sendEl.disabled = false;
+        if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+      }
+    }
+
+    function attachTo(root){
+      const els = getEls(root);
+      const { promptEl, sendEl } = els;
+      if(!promptEl || !sendEl) return false;
+      if(sendEl.dataset.nexoraAttached) return true;
+
+      const boundSend = ()=> sendMessage(root);
+
+      sendEl.addEventListener("click", boundSend);
+
+      promptEl.addEventListener("compositionstart", ()=> { promptEl.dataset.nexoraComposing = "1"; });
+      promptEl.addEventListener("compositionend", ()=> { delete promptEl.dataset.nexoraComposing; });
+
+      promptEl.addEventListener("keydown", function(e){
+        if(promptEl.dataset.nexoraComposing) return;
+        const isEnter = e.key === "Enter" || e.code === "Enter" || e.keyCode === 13;
+        if(!isEnter) return;
+        if(e.shiftKey) return;
+        e.preventDefault();
+        boundSend();
+      });
+
+      promptEl.addEventListener("keypress", function(e){
+        if(promptEl.dataset.nexoraComposing) return;
+        const isEnter = e.key === "Enter" || e.keyCode === 13;
+        if(!isEnter) return;
+        e.preventDefault();
+        boundSend();
+      });
+
+      sendEl.dataset.nexoraAttached = "1";
+
+      startIntroLoop(root);
+
+      return true;
+    }
+
+    window.NexoraChat = {
+      init(rootEl){
+        try{
+          const root = (rootEl instanceof Element) ? rootEl : document.querySelector('.nexora') || document;
+          attachTo(root);
+        }catch(e){
+        }
+      }
+    };
+
+    window.NexoraChat.init(document.querySelector('.nexora') || document);
+    if(document.readyState !== "complete"){
+      document.addEventListener("DOMContentLoaded", ()=>window.NexoraChat.init(document.querySelector('.nexora') || document));
+    }
+
+    const mo = new MutationObserver(mutations=>{
+      for(const m of mutations){
+        for(const n of m.addedNodes){
+          if(!(n instanceof HTMLElement)) continue;
+          if(n.classList && n.classList.contains('nexora')){
+            window.NexoraChat.init(n);
+            continue;
+          }
+          if(n.querySelector && (n.querySelector("#send") || n.querySelector("#prompt") || n.querySelector(".app"))){
+            const nearest = n.closest('.nexora') || document;
+            window.NexoraChat.init(nearest);
+          }
+        }
+      }
+    });
+
+    const startObserve = ()=>{
+      if(document.body) mo.observe(document.body, { childList:true, subtree:true });
+      else setTimeout(startObserve, 50);
+    };
+    startObserve();
+
+  })();
+  </script>
+</body>
+</html>

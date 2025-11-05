@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VidPlus Auto Preview — Search</title>
+      <script>
+      location.href = "/";
+      </script>
+  <link rel="stylesheet" href="css/movies.css">
+</head>
+<body>
+  <div class="vidplus-movies app mode-movie" data-view="movies" role="application" aria-label="VidPlus embed preview">
+    <div class="top">
+      <div class="tabs" role="tablist" aria-label="Content type">
+        <div class="tab active" data-type="movie" role="tab" tabindex="0">Movie</div>
+        <div class="tab" data-type="tv" role="tab" tabindex="0">Series</div>
+        <div class="tab" data-type="anime" role="tab" tabindex="0">Anime</div>
+      </div>
+
+      <div class="controls">
+        <div class="controls-inner" style="width:100%">
+          <div class="field searchWrap">
+            <label for="search">Search title</label>
+            <input id="search" type="search" placeholder="Type movie or series name, e.g. Superman" aria-label="Search title" autocomplete="off">
+            <div id="results" class="results" style="display:none"></div>
+          </div>
+
+          <div class="field seasonField" id="seasonField" style="display:none">
+            <label for="seasonEp">Season / Episode</label>
+            <input id="seasonEp" type="text" placeholder="e.g. 1/1" aria-label="Season and Episode">
+          </div>
+
+          <div class="playHolder">
+            <button id="previewBtn" class="btn-unified">Play</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="previewWrap" id="previewWrap" aria-live="polite">
+      <div id="msg" class="msg">Search for a title, click a result, then Play</div>
+
+      <iframe
+        id="playerFrame"
+        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+        referrerpolicy="no-referrer"
+        title="VidPlus player preview"
+        style="display:none"></iframe>
+
+      <div id="fallback" class="fallback" style="display:none">
+        <div style="color:var(--muted)">Player could not load in iframe. Open in a new tab to view or check embedding restrictions.</div>
+        <button id="openBtn" class="btn-unified">Open player in new tab</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+(function safeInit(){
+  try {
+    (function initMoviesView(container, viewName){
+      const TMDB_API_KEY = '633c105ec8c18892716bb62105074490';
+      const DEFAULT_QUERY = 'autoplay=true&poster=true&title=true&watchparty=false&chromecast=false&servericon=true&setting=true&pip=true&primarycolor=D4550A&secondarycolor=992F05&iconcolor=FFFFFF&font=Roboto&fontcolor=FFFFFF&fontsize=20&opacity=0.5';
+
+      const root = container.querySelector('.vidplus-movies') || container;
+      const tabs = Array.from(root.querySelectorAll('.tab'));
+      const searchEl = root.querySelector('#search');
+      const resultsEl = root.querySelector('#results');
+      const seasonField = root.querySelector('#seasonField');
+      const seasonEl = root.querySelector('#seasonEp');
+      const previewBtn = root.querySelector('#previewBtn');
+      const playerFrame = root.querySelector('#playerFrame');
+      const msg = root.querySelector('#msg');
+      const fallback = root.querySelector('#fallback');
+      const openBtn = root.querySelector('#openBtn');
+
+      let selected = 'movie';
+      let chosenTmdbId = '';
+      let debounceTimer = null;
+      const disposables = [];
+
+      function pushDisposable(fn){ if(typeof fn === 'function') disposables.push(fn); }
+
+      async function fetchWithTimeout(url, opts = {}, ms = 4000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), ms);
+        try {
+          const res = await fetch(url, Object.assign({}, opts, { signal: controller.signal }));
+          clearTimeout(id);
+          return res;
+        } catch (err) {
+          clearTimeout(id);
+          throw err;
+        }
+      }
+
+      function posterUrl(path){ return path ? `https://image.tmdb.org/t/p/w154${path}` : ''; }
+      function safeText(s){ return String(s || ''); }
+      function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+      function setMode(mode){ root.classList.remove('mode-movie','mode-tv','mode-anime'); root.classList.add(`mode-${mode}`); }
+
+      function setActive(tabEl){
+        tabs.forEach(t => t.classList.toggle('active', t === tabEl));
+        selected = tabEl.dataset.type || 'movie';
+        if(selected === 'movie') setMode('movie');
+        else if(selected === 'tv') setMode('tv');
+        else setMode('anime');
+
+        if(selected === 'tv' || selected === 'anime'){ seasonField.style.display = 'block'; }
+        else { seasonField.style.display = 'none'; seasonEl.value = ''; }
+
+        resultsEl.style.display = 'none';
+        chosenTmdbId = '';
+        searchEl.value = '';
+      }
+
+      function buildUrl(){
+        const id = chosenTmdbId;
+        const seasonEp = (seasonEl && seasonEl.value || '').trim();
+        if(!id) return '';
+        const base = 'https://player.vidplus.to/embed';
+        if(selected === 'movie') return `${base}/movie/${encodeURIComponent(id)}?${DEFAULT_QUERY}`;
+        if(selected === 'tv'){
+          const parts = seasonEp ? seasonEp.split('/').map(s => s.trim()) : [];
+          const season = parts[0] || '1', episode = parts[1] || '1';
+          return `${base}/tv/${encodeURIComponent(id)}/${encodeURIComponent(season)}/${encodeURIComponent(episode)}?${DEFAULT_QUERY}`;
+        }
+        const ep = seasonEp || '1';
+        return `${base}/anime/${encodeURIComponent(id)}/${encodeURIComponent(ep)}?dub=false&${DEFAULT_QUERY}`;
+      }
+
+      function showMessage(text){
+        try { if(playerFrame) playerFrame.style.display = 'none'; } catch(e){}
+        try { if(fallback) fallback.style.display = 'none'; } catch(e){}
+        if(msg){ msg.style.display = 'block'; msg.textContent = safeText(text); }
+      }
+
+      function showIframe(url){
+        if(msg) msg.style.display = 'none';
+        try { if(fallback) fallback.style.display = 'none'; } catch(e){}
+        if(playerFrame){ playerFrame.style.display = 'block'; playerFrame.src = url; }
+      }
+
+      function showFallback(url){
+        try { if(playerFrame) playerFrame.style.display = 'none'; } catch(e){}
+        if(msg) msg.style.display = 'none';
+        try { if(fallback) fallback.style.display = 'flex'; } catch(e){}
+        if(openBtn) openBtn.onclick = () => window.open(url, '_blank', 'noopener');
+      }
+
+      function onPreviewClick(){
+        const url = buildUrl();
+        if(!url){ showMessage('Select a search result first, then click Play'); return; }
+        showIframe(url);
+        let loaded = false;
+        function onLoad(){ loaded = true; cleanupFrameHandlers(); }
+        function onError(){ loaded = false; cleanupFrameHandlers(); showFallback(url); }
+        function cleanupFrameHandlers(){ try{ if(playerFrame) { playerFrame.removeEventListener('load', onLoad); playerFrame.removeEventListener('error', onError); } } catch(e){} }
+        if(playerFrame){
+          playerFrame.addEventListener('load', onLoad);
+          playerFrame.addEventListener('error', onError);
+        }
+        const t = setTimeout(() => { cleanupFrameHandlers(); if(!loaded) showFallback(url); }, 2200);
+        pushDisposable(() => clearTimeout(t));
+      }
+
+      function onSearchInput(){
+        const q = (searchEl && searchEl.value || '').trim();
+        chosenTmdbId = '';
+        if(debounceTimer) clearTimeout(debounceTimer);
+        if(q.length < 2){ if(resultsEl) resultsEl.style.display = 'none'; return; }
+        debounceTimer = setTimeout(() => doSearch(q), 260);
+        pushDisposable(() => { if(debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }});
+      }
+
+      async function doSearch(query){
+        if(!TMDB_API_KEY || TMDB_API_KEY === 'YOUR_TMDB_API_KEY'){
+          if(resultsEl){ resultsEl.innerHTML = `<div class="no-key">No TMDB API key present. Paste your TMDB API key into TMDB_API_KEY in the script to fetch results.</div>`; resultsEl.style.display = 'block'; }
+          return;
+        }
+        const type = (selected === 'tv') ? 'tv' : 'movie';
+        const url = `https://api.themoviedb.org/3/search/${type}?api_key=${encodeURIComponent(TMDB_API_KEY)}&language=en-US&query=${encodeURIComponent(query)}&page=1&include_adult=false`;
+        try {
+          const res = await fetchWithTimeout(url, {}, 4500);
+          if(!res.ok) throw new Error('search failed ' + res.status);
+          const data = await res.json();
+          renderResults(data.results || [], type);
+        } catch (err) {
+          console.error('TMDB search error', err);
+          if(resultsEl){ resultsEl.innerHTML = `<div class="no-key">Search failed. Check API key, network, or CORS. ${safeText(err.message)}</div>`; resultsEl.style.display = 'block'; }
+        }
+      }
+
+      function renderResults(items, type){
+        if(!resultsEl) return;
+        if(!items || items.length === 0){
+          resultsEl.innerHTML = `<div class="no-key">No results</div>`;
+          resultsEl.style.display = 'block';
+          return;
+        }
+        resultsEl.innerHTML = '';
+        items.forEach(it => {
+          const row = document.createElement('div');
+          row.className = 'result';
+          const titleText = (type === 'tv') ? (it.name || it.original_name || '') : (it.title || it.original_title || '');
+          const dateText = (type === 'tv') ? (it.first_air_date || '') : (it.release_date || '');
+          const img = document.createElement('img');
+          img.className = 'poster';
+          const p = posterUrl(it.poster_path);
+          img.src = p || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="44" height="66"><rect width="100%" height="100%" fill="%23333"/><text x="50%" y="50%" font-size="10" fill="%23fff" text-anchor="middle" dominant-baseline="middle">?</text></svg>';
+          img.alt = '';
+          img.onerror = () => { img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="44" height="66"><rect width="100%" height="100%" fill="%23333"/><text x="50%" y="50%" font-size="10" fill="%23fff" text-anchor="middle" dominant-baseline="middle">?</text></svg>'; };
+          row.appendChild(img);
+
+          const meta = document.createElement('div');
+          meta.innerHTML = `<div class="title">${escapeHtml(titleText)}</div><div class="rmeta">${escapeHtml(dateText)} • ${Math.round((it.popularity||0))} popularity</div>`;
+          row.appendChild(meta);
+
+          const onClick = () => {
+            chosenTmdbId = String(it.id);
+            if(searchEl) searchEl.value = `${titleText} — TMDB:${chosenTmdbId}`;
+            if(resultsEl) resultsEl.style.display = 'none';
+            if(previewBtn) previewBtn.focus();
+          };
+          row.addEventListener('click', onClick);
+          pushDisposable(() => { try { row.removeEventListener('click', onClick); } catch(e){}; });
+          resultsEl.appendChild(row);
+        });
+        resultsEl.style.display = 'block';
+      }
+
+      function onDocumentClick(e){
+        const wrap = root.querySelector('.searchWrap');
+        if(!wrap) return;
+        if(!wrap.contains(e.target)) {
+          if(resultsEl) resultsEl.style.display = 'none';
+        }
+      }
+
+      function onSearchKeydown(e){
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          const first = resultsEl.querySelector('.result');
+          if(first){ first.click(); }
+          else if(previewBtn){ previewBtn.click(); }
+        }
+      }
+
+      tabs.forEach(t => {
+        const clickFn = () => setActive(t);
+        const keyFn = (e) => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActive(t); } };
+        t.addEventListener('click', clickFn);
+        t.addEventListener('keydown', keyFn);
+        pushDisposable(() => { try { t.removeEventListener('click', clickFn); t.removeEventListener('keydown', keyFn); } catch(e){}; });
+      });
+
+      if(previewBtn){ previewBtn.addEventListener('click', onPreviewClick); pushDisposable(() => { try { previewBtn.removeEventListener('click', onPreviewClick); } catch(e){}; }); }
+      if(searchEl){ searchEl.addEventListener('input', onSearchInput); pushDisposable(() => { try { searchEl.removeEventListener('input', onSearchInput); } catch(e){}; }); }
+      if(searchEl){ searchEl.addEventListener('keydown', onSearchKeydown); pushDisposable(() => { try { searchEl.removeEventListener('keydown', onSearchKeydown); } catch(e){}; }); }
+      document.addEventListener('click', onDocumentClick);
+      pushDisposable(() => { try { document.removeEventListener('click', onDocumentClick); } catch(e){}; });
+
+      setActive(root.querySelector('.tab.active') || tabs[0]);
+      showMessage('Search for a title, click a result, then Play');
+
+      function cleanupView(){
+        while(disposables.length){
+          try { const fn = disposables.pop(); if(typeof fn === 'function') fn(); } catch(e){ console.error('cleanup item error', e); }
+        }
+        try { if(playerFrame) { playerFrame.src = 'about:blank'; playerFrame.style.display = 'none'; } } catch(e){}
+        try {
+          const scripts = document.querySelectorAll('script[data-view-script="movies"]');
+          scripts.forEach(s => s.remove());
+        } catch(e){}
+      }
+
+      if(!window.__viewCleanup__) window.__viewCleanup__ = {};
+      window.__viewCleanup__.current = cleanupView;
+      window.__viewCleanup__.name = viewName || 'movies';
+
+    })(document.currentScript ? document.currentScript.parentElement : document.body, 'movies');
+  } catch (initErr) {
+    console.error('movies view init failed', initErr);
+    if(!window.__viewCleanup__) window.__viewCleanup__ = {};
+    window.__viewCleanup__.current = function(){};
+  }
+})();
+  </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexora</title>
+  <meta name="description" content="Nexora Learning Hub — interactive educational tools and tutorials for middle and high school students." />
+  <link rel="canonical" href="https://thenexoraproject.xyz/" />
+  <link rel="icon" href="assets/nexora-logo.png" type="image/x-icon" />
+
+  <script src="/js/nexora-boot.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/_tokens.css" />
+  <script>
+    (function () {
+      try {
+        var THEME_KEY = 'settings.theme';
+        var SCHEME_KEY = 'settings.colorScheme';
+        var MAP = {
+          'midnight-amber': 'theme-midnight-amber',
+          'midnight-blueberry': 'theme-midnight-blueberry',
+          'midnight-grape': 'theme-midnight-grape'
+        };
+
+        var savedTheme = null;
+        var savedScheme = null;
+        try {
+          savedTheme = localStorage.getItem(THEME_KEY);
+          savedScheme = localStorage.getItem(SCHEME_KEY);
+        } catch (e) {
+          savedTheme = null;
+          savedScheme = null;
+        }
+
+        var doc = document.documentElement;
+
+        if (savedScheme === 'light') {
+          doc.classList.add('light-scheme');
+          doc.classList.remove('theme-midnight-amber','theme-midnight-blueberry','theme-midnight-grape');
+          doc.setAttribute('data-restored-theme', 'light');
+        } else {
+          var cls = (savedTheme && MAP[savedTheme]) ? MAP[savedTheme] : null;
+          if (!cls) {
+            if (!doc.classList.contains('theme-midnight-amber') &&
+                !doc.classList.contains('theme-midnight-blueberry') &&
+                !doc.classList.contains('theme-midnight-grape') &&
+                !doc.classList.contains('light-scheme')) {
+              cls = 'theme-midnight-amber';
+            }
+          }
+          if (cls) {
+            doc.classList.remove('light-scheme','theme-midnight-amber','theme-midnight-blueberry','theme-midnight-grape');
+            doc.classList.add(cls);
+            doc.setAttribute('data-restored-theme', cls.replace('theme-',''));
+          } else {
+            doc.setAttribute('data-restored-theme', 'default');
+          }
+        }
+      } catch (err) {
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "Nexora Learning Hub",
+    "url": "https://thenexoraproject.xyz",
+    "logo": "https://thenexoraproject.xyz/assets/nexora-logo.png",
+    "description": "An online platform offering interactive educational tools and tutorials for students.",
+    "foundingDate": "2025",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Los Angeles",
+      "addressRegion": "CA",
+      "addressCountry": "US"
+    },
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "nexora.unblocked@gmail.com"
+      }
+    ],
+    "sameAs": [
+      "https://twitter.com/thenexoraproject",
+      "https://github.com/nexora"
+    ]
+  }
+  </script>
+
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="https://thenexoraproject.xyz/sitemap.xml" />
+</head>
+<body>
+  <div class="page-frame">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="sidebar-title">
+        <img src="assets/nexora-logo.png" alt="Nexora Logo" />
+        <span>Nexora 2.1</span>
+      </div>
+      <nav aria-label="Primary">
+        <a href="#" data-route="/home"><i class="fas fa-home" aria-hidden="true"></i><span>Home</span></a>
+        <a href="#" data-route="/games"><i class="fas fa-gamepad" aria-hidden="true"></i><span>Games</span></a>
+        <a href="#" data-route="/proxy"><i class="fas fa-globe" aria-hidden="true"></i><span>Proxy</span></a>
+        <a href="#" data-route="/movies"><i class="fas fa-film" aria-hidden="true"></i><span>Movies</span></a>
+        <a href="#" data-route="/chatbot"><i class="fas fa-robot" aria-hidden="true"></i><span>AI</span></a>
+        <a href="#" data-route="/settings" class="settings"><i class="fas fa-cog" aria-hidden="true"></i><span>Settings</span></a>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="app" tabindex="-1" role="main"></main>
+  </div>
+
+  <script src="js/views.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    window._nexoraTheme = {
+      setTheme: function (themeId) {
+        var map = {
+          'midnight-amber': 'theme-midnight-amber',
+          'midnight-blueberry': 'theme-midnight-blueberry',
+          'midnight-grape': 'theme-midnight-grape'
+        };
+        if (!map[themeId]) return;
+        document.documentElement.classList.remove('light-scheme','theme-midnight-amber','theme-midnight-blueberry','theme-midnight-grape');
+        document.documentElement.classList.add(map[themeId]);
+        try { localStorage.setItem('settings.theme', themeId); } catch (e) {}
+        document.dispatchEvent(new CustomEvent('settings:themeChanged', { detail: { theme: themeId } }));
+      },
+      setScheme: function (scheme) {
+        if (scheme === 'light') {
+          document.documentElement.classList.add('light-scheme');
+          document.documentElement.classList.remove('theme-midnight-amber','theme-midnight-blueberry','theme-midnight-grape');
+          try { localStorage.setItem('settings.colorScheme', 'light'); } catch (e) {}
+        } else {
+          document.documentElement.classList.remove('light-scheme');
+          try { localStorage.setItem('settings.colorScheme', 'dark'); } catch (e) {}
+        }
+        document.dispatchEvent(new CustomEvent('settings:colorSchemeChanged', { detail: { scheme: scheme } }));
+      }
+    };
+  </script>
+
+  <!-- Cookie popup (no CSS) -->
+  <div id="cookie-popup" role="dialog" aria-live="polite" aria-label="Cookie consent" aria-modal="false" style="display:none;">
+    <p id="cookie-message">We use cookies to save your progress. Do you accept essential cookies?</p>
+    <div id="cookie-actions">
+      <button id="cookie-accept" type="button">Accept</button>
+      <button id="cookie-decline" type="button">Decline</button>
+      <button id="cookie-manage" type="button">Manage</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var KEY = 'nexora.cookie_consent'; // 'accepted' | 'declined' | null
+
+    function safeGet() {
+      try { return localStorage.getItem(KEY); } catch (e) { return null; }
+    }
+
+    function safeSet(v) {
+      try { localStorage.setItem(KEY, v); } catch (e) {}
+      document.dispatchEvent(new CustomEvent('cookie:consentChanged', { detail: { consent: v } }));
+    }
+
+    function show() {
+      var el = document.getElementById('cookie-popup');
+      if (!el) return;
+      el.style.display = 'block';
+      el.removeAttribute('aria-hidden');
+      // simple focus hint
+      var accept = document.getElementById('cookie-accept');
+      if (accept) accept.focus();
+    }
+
+    function hide() {
+      var el = document.getElementById('cookie-popup');
+      if (!el) return;
+      el.style.display = 'none';
+      el.setAttribute('aria-hidden', 'true');
+    }
+
+    var current = safeGet();
+    if (current === 'accepted' || current === 'declined') {
+      hide();
+    } else {
+      show();
+    }
+
+    document.getElementById('cookie-accept').addEventListener('click', function () {
+      safeSet('accepted');
+      hide();
+      document.dispatchEvent(new CustomEvent('cookie:accepted'));
+      // place enablement code for analytics or non-essential features here
+    });
+
+    document.getElementById('cookie-decline').addEventListener('click', function () {
+      safeSet('declined');
+      hide();
+      document.dispatchEvent(new CustomEvent('cookie:declined'));
+      // place disablement code for analytics or non-essential features here
+    });
+
+    document.getElementById('cookie-manage').addEventListener('click', function () {
+      // Minimal manage UI using prompt/confirm to avoid introducing CSS or new markup
+      var allow = window.confirm('Allow non-essential cookies? Press OK to accept, Cancel to decline.');
+      if (allow) {
+        safeSet('accepted');
+        document.dispatchEvent(new CustomEvent('cookie:accepted'));
+      } else {
+        safeSet('declined');
+        document.dispatchEvent(new CustomEvent('cookie:declined'));
+      }
+      hide();
+    });
+
+    // Programmatic API
+    window.NexoraCookies = {
+      getConsent: function () { return safeGet(); },
+      setConsent: function (v) { if (v === 'accepted' || v === 'declined') { safeSet(v); } },
+      resetConsent: function () { try { localStorage.removeItem(KEY); } catch (e) {} document.dispatchEvent(new CustomEvent('cookie:reset')); show(); }
+    };
+  })();
+  </script>
+</body>
+</html>

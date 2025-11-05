@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Game Loader — Option A (HTTPS iframe)</title>
+  <link rel="stylesheet" href="css/games.css" />
+</head>
+<body>
+  <div class="loader-page">
+    <div class="loader-wrapper">
+      <div id="gameContainer"></div>
+      <footer class="loader-footer">
+        <div class="branding">
+          <img src="assets/nexora-logo.png" alt="Nexora Logo" />
+          <span>Nexora</span>
+        </div>
+        <button id="fullscreenBtn" class="fullscreen-btn">
+          <img src="assets/full-screen-icon.svg" alt="Full Screen" />
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    function normalizeToHttpsS3(urlStr) {
+      try {
+        const u = new URL(urlStr);
+        if (u.protocol === 'https:' && u.hostname.endsWith('.s3.amazonaws.com')) {
+          return urlStr;
+        }
+
+        if (/s3-website.*\.amazonaws\.com$/i.test(u.hostname)) {
+          const parts = u.hostname.split('.');
+          if (u.hostname.startsWith('s3-website')) {
+            const pathParts = u.pathname.replace(/^\/+/,'').split('/');
+            if (pathParts.length >= 2) {
+              const bucket = pathParts.shift();
+              const key = pathParts.join('/');
+              return `https://${bucket}.s3.${parts[1].replace('s3-website-','')}.amazonaws.com/${key}`;
+            } else {
+            }
+          } else {
+            const bucket = parts[0];
+            const match = u.hostname.match(/s3-website-([a-z0-9-]+)\.amazonaws\.com$/i);
+            const region = match ? match[1] : 'us-east-1';
+            const key = u.pathname.replace(/^\/+/,'');
+            return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+          }
+        }
+
+        return urlStr;
+      } catch (e) {
+        return urlStr;
+      }
+    }
+
+    function initLoader() {
+      const allGames    = JSON.parse(sessionStorage.getItem("gamesList")    || "[]");
+      const currentGame = JSON.parse(sessionStorage.getItem("currentGame") || "null");
+      if (!currentGame) {
+        location.href = "game.html";
+        return;
+      }
+
+      const container = document.getElementById("gameContainer");
+      const fsBtn     = document.getElementById("fullscreenBtn");
+
+      container.innerHTML = `
+        <div class="loader-start">
+          <img src="${currentGame.thumbnail}" alt="${currentGame.title}" />
+          <h2 class="game-title">${currentGame.title}</h2>
+          <button id="playBtn" class="play-btn">Play Now</button>
+        </div>
+      `;
+
+      document.getElementById("playBtn").onclick = () => {
+        const iframe = document.createElement("iframe");
+        iframe.src = normalizeToHttpsS3(currentGame.file);
+        iframe.setAttribute("allowfullscreen", "");
+        iframe.frameBorder = 0;
+        iframe.className = "game-iframe";
+        container.innerHTML = "";
+        container.appendChild(iframe);
+      };
+
+      fsBtn.onclick = () => {
+        const el = container.querySelector(".game-iframe") || container;
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      };
+    }
+
+    initLoader();
+  </script>
+</body>
+</html>
